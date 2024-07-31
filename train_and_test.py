@@ -1,15 +1,17 @@
-import time
-import torch
-
 from helpers import list_of_distances, make_one_hot
 
+import numpy as np
+import time
+import torch
+from sklearn.metrics import f1_score, roc_auc_score,accuracy_score
+
+def log_to_file_and_console(message, logfile='results.txt'):
+    print(message)
+    with open(logfile, 'a') as f:
+        f.write(message + '\n')
+
 def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l1_mask=True,
-                   coefs=None, log=print):
-    '''
-    model: the multi-gpu model
-    dataloader:
-    optimizer: if None, will be test evaluation
-    '''
+                   coefs=None, log=log_to_file_and_console):
     is_train = optimizer is not None
     start = time.time()
     n_examples = 0
@@ -17,22 +19,20 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     n_batches = 0
     total_cross_entropy = 0
     total_cluster_cost = 0
-    # separation cost is meaningful only for class_specific
     total_separation_cost = 0
     total_avg_separation_cost = 0
+
+    all_labels = []
+    all_scores = []
 
     for i, (image, label) in enumerate(dataloader):
         input = image.cuda()
         target = label.cuda()
 
-        # torch.enable_grad() has no effect outside of no_grad()
         grad_req = torch.enable_grad() if is_train else torch.no_grad()
         with grad_req:
-            # nn.Module has implemented __call__() function
-            # so no need to call .forward
             output, min_distances = model(input)
 
-            # compute loss
             cross_entropy = torch.nn.functional.cross_entropy(output, target)
 
             if class_specific:
@@ -40,48 +40,44 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                             * model.module.prototype_shape[2]
                             * model.module.prototype_shape[3])
 
-                # prototypes_of_correct_class is a tensor of shape batch_size * num_prototypes
-                # calculate cluster cost
-                prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).cuda()
+                prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:, label]).cuda()
                 inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)
                 cluster_cost = torch.mean(max_dist - inverted_distances)
 
-                # calculate separation cost
                 prototypes_of_wrong_class = 1 - prototypes_of_correct_class
                 inverted_distances_to_nontarget_prototypes, _ = \
                     torch.max((max_dist - min_distances) * prototypes_of_wrong_class, dim=1)
                 separation_cost = torch.mean(max_dist - inverted_distances_to_nontarget_prototypes)
 
-                # calculate avg cluster cost
                 avg_separation_cost = \
                     torch.sum(min_distances * prototypes_of_wrong_class, dim=1) / torch.sum(prototypes_of_wrong_class, dim=1)
                 avg_separation_cost = torch.mean(avg_separation_cost)
                 
                 if use_l1_mask:
-                    # makes the weights of last layer smaller (only the ones not related to current label's prototypes)
                     l1_mask = 1 - torch.t(model.module.prototype_class_identity).cuda()
                     l1 = (model.module.last_layer.weight * l1_mask).norm(p=1)
                 else:
-                    # makes the weights of last layer smaller (all of them)
-                    l1 = model.module.last_layer.weight.norm(p=1) 
+                    l1 = model.module.last_layer.weight.norm(p=1)
 
             else:
                 min_distance, _ = torch.min(min_distances, dim=1)
                 cluster_cost = torch.mean(min_distance)
                 l1 = model.module.last_layer.weight.norm(p=1)
 
-            # evaluation statistics
             _, predicted = torch.max(output.data, 1)
             n_examples += target.size(0)
+            n_batches += 1
             n_correct += (predicted == target).sum().item()
 
-            n_batches += 1
             total_cross_entropy += cross_entropy.item()
             total_cluster_cost += cluster_cost.item()
             total_separation_cost += separation_cost.item()
             total_avg_separation_cost += avg_separation_cost.item()
 
-        # compute gradient and do SGD step
+            # Append to all_labels and all_scores
+            all_labels.extend(target.cpu().numpy())
+            all_scores.extend(output.softmax(dim=1).detach().cpu().numpy())
+
         if is_train:
             if class_specific:
                 if coefs is not None:
@@ -110,18 +106,28 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 
     end = time.time()
 
-    log('\ttime: \t{0}'.format(end -  start))
-    log('\tcross ent: \t{0}'.format(total_cross_entropy / n_batches))
-    log('\tcluster: \t{0}'.format(total_cluster_cost / n_batches))
+    log(f'\ttime: \t{end - start}')
+    log(f'\tcross ent: \t{total_cross_entropy / n_batches}')
+    log(f'\tcluster: \t{total_cluster_cost / n_batches}')
     if class_specific:
-        log('\tseparation:\t{0}'.format(total_separation_cost / n_batches))
-        log('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
-    log('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
-    log('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
+        log(f'\tseparation:\t{total_separation_cost / n_batches}')
+        log(f'\tavg separation:\t{total_avg_separation_cost / n_batches}')
+    log(f'\taccu: \t\t{n_correct / n_examples * 100}%')
+    log(f'\tl1: \t\t{model.module.last_layer.weight.norm(p=1).item()}')
     p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(list_of_distances(p, p))
-    log('\tp dist pair: \t{0}'.format(p_avg_pair_dist.item()))
+    log(f'\tp dist pair: \t{p_avg_pair_dist.item()}')
+
+    # Calculate metrics
+    all_scores = np.array(all_scores)
+    accuracy = accuracy_score(all_labels, [score.argmax() for score in all_scores])
+    f1 = f1_score(all_labels, [score.argmax() for score in all_scores], average='weighted')
+    auroc = roc_auc_score(all_labels, all_scores[:, 1], multi_class='ovr', average='weighted')
+
+    log(f'\tAccuracy: {accuracy * 100:.2f}%')
+    log(f'\tF1 Score: {f1:.4f}')
+    log(f'\tAUROC: {auroc:.4f}')
 
     return n_correct / n_examples
 

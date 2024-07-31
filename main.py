@@ -9,11 +9,11 @@ import torchvision.datasets as datasets
 
 import argparse
 import re
+import pandas as pd
 
 from helpers import makedir
 import model
 import push
-import prune
 import train_and_test as tnt
 import save
 from log import create_logger
@@ -21,6 +21,7 @@ from preprocess import mean, std, preprocess_input_function
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-gpuid', nargs=1, type=str, default='0') # python3 main.py -gpuid=0,1,2,3
+parser.add_argument('-base', nargs=1, type=str, default='vgg19') 
 args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
 print(os.environ['CUDA_VISIBLE_DEVICES'])
@@ -50,51 +51,76 @@ proto_bound_boxes_filename_prefix = 'bb'
 # load the data
 from settings import train_dir, test_dir, train_push_dir, \
                      train_batch_size, test_batch_size, train_push_batch_size
+# ---------------------------------------------------------------
+# Updated data loader code
+from settings import data_dir, csv_file_for_labels
+from dataset_class import ECGImageDataset
 
-normalize = transforms.Normalize(mean=mean,
-                                 std=std)
+# Define transformations
+img_size = 224  # or whatever size you want
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+transform = transforms.Compose([
+    transforms.Resize((img_size, img_size)),
+    transforms.ToTensor(),
+    normalize,
+])
+
+# Load the CSV file
+label_df = pd.read_csv(csv_file_for_labels)
+train_df = label_df.sample(frac = 0.8)
+test_df = label_df.drop(train_df.index)
+
+train_dataset = ECGImageDataset(train_df, data_dir, transform=transform)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4, pin_memory=False)
+
+test_dataset = ECGImageDataset(test_df, data_dir, transform=transform)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True, num_workers=4, pin_memory=False)
+# ---------------------------------------------------------------
+# normalize = transforms.Normalize(mean=mean,
+#                                  std=std)
 
 # all datasets
 # train set
-train_dataset = datasets.ImageFolder(
-    train_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
-train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=train_batch_size, shuffle=True,
-    num_workers=4, pin_memory=False)
-# push set
-train_push_dataset = datasets.ImageFolder(
-    train_push_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-    ]))
-train_push_loader = torch.utils.data.DataLoader(
-    train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
-# test set
-test_dataset = datasets.ImageFolder(
-    test_dir,
-    transforms.Compose([
-        transforms.Resize(size=(img_size, img_size)),
-        transforms.ToTensor(),
-        normalize,
-    ]))
-test_loader = torch.utils.data.DataLoader(
-    test_dataset, batch_size=test_batch_size, shuffle=False,
-    num_workers=4, pin_memory=False)
+# train_dataset = datasets.ImageFolder(
+#     train_dir,
+#     transforms.Compose([
+#         transforms.Resize(size=(img_size, img_size)),
+#         transforms.ToTensor(),
+#         normalize,
+#     ]))
+# train_loader = torch.utils.data.DataLoader(
+#     train_dataset, batch_size=train_batch_size, shuffle=True,
+#     num_workers=4, pin_memory=False)
+# # push set
+# train_push_dataset = datasets.ImageFolder(
+#     train_push_dir,
+#     transforms.Compose([
+#         transforms.Resize(size=(img_size, img_size)),
+#         transforms.ToTensor(),
+#     ]))
+# train_push_loader = torch.utils.data.DataLoader(
+#     train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
+#     num_workers=4, pin_memory=False)
+# # test set
+# test_dataset = datasets.ImageFolder(
+#     test_dir,
+#     transforms.Compose([
+#         transforms.Resize(size=(img_size, img_size)),
+#         transforms.ToTensor(),
+#         normalize,
+#     ]))
+# test_loader = torch.utils.data.DataLoader(
+#     test_dataset, batch_size=test_batch_size, shuffle=False,
+#     num_workers=4, pin_memory=False)
 
 # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
 log('training set size: {0}'.format(len(train_loader.dataset)))
-log('push set size: {0}'.format(len(train_push_loader.dataset)))
-log('test set size: {0}'.format(len(test_loader.dataset)))
+# log('push set size: {0}'.format(len(train_push_loader.dataset)))
+# log('test set size: {0}'.format(len(test_loader.dataset)))
 log('batch size: {0}'.format(train_batch_size))
 
 # construct the model
+base_architecture = args.base[0]
 ppnet = model.construct_PPNet(base_architecture=base_architecture,
                               pretrained=True, img_size=img_size,
                               prototype_shape=prototype_shape,
@@ -103,7 +129,7 @@ ppnet = model.construct_PPNet(base_architecture=base_architecture,
                               add_on_layers_type=add_on_layers_type)
 #if prototype_activation_function == 'linear':
 #    ppnet.set_last_layer_incorrect_connection(incorrect_strength=0)
-ppnet = ppnet.cuda()
+ppnet = ppnet.to('cuda')
 ppnet_multi = torch.nn.DataParallel(ppnet)
 class_specific = True
 
@@ -150,14 +176,14 @@ for epoch in range(num_train_epochs):
         _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer,
                       class_specific=class_specific, coefs=coefs, log=log)
 
-    accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
+    accu = tnt.test(model=ppnet_multi, dataloader=test_loader, 
                     class_specific=class_specific, log=log)
     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
                                 target_accu=0.70, log=log)
 
     if epoch >= push_start and epoch in push_epochs:
         push.push_prototypes(
-            train_push_loader, # pytorch dataloader (must be unnormalized in [0,1])
+            train_loader, # pytorch dataloader (must be unnormalized in [0,1])   # CHANGE TRAIN_PUSH_LOADER TO TRAIN_LOADER
             prototype_network_parallel=ppnet_multi, # pytorch network with prototype_vectors
             class_specific=class_specific,
             preprocess_input_function=preprocess_input_function, # normalize if needed
@@ -169,7 +195,7 @@ for epoch in range(num_train_epochs):
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
             save_prototype_class_identity=True,
             log=log)
-        accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
+        accu = tnt.test(model=ppnet_multi, dataloader=test_loader,  
                         class_specific=class_specific, log=log)
         save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu,
                                     target_accu=0.70, log=log)
@@ -180,7 +206,7 @@ for epoch in range(num_train_epochs):
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
-                accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
+                accu = tnt.test(model=ppnet_multi, dataloader=test_loader, 
                                 class_specific=class_specific, log=log)
                 save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
                                             target_accu=0.70, log=log)
