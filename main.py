@@ -40,7 +40,10 @@ shutil.copy(src=os.path.join(os.getcwd(), base_architecture_type + '_features.py
 shutil.copy(src=os.path.join(os.getcwd(), 'model.py'), dst=model_dir)
 shutil.copy(src=os.path.join(os.getcwd(), 'train_and_test.py'), dst=model_dir)
 
+from train_and_test import log_to_file_and_console
 log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
+log = log_to_file_and_console  # CHANGE THE LOG FUNCTION
+
 img_dir = os.path.join(model_dir, 'img')
 makedir(img_dir)
 weight_matrix_filename = 'outputL_weights'

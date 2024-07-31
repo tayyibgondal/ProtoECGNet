@@ -5,7 +5,9 @@ import time
 import torch
 from sklearn.metrics import f1_score, roc_auc_score,accuracy_score
 
-def log_to_file_and_console(message, logfile='results.txt'):
+log_file_name = 'results-' + base_architecture + '-' + experiment_run + '.txt'
+
+def log_to_file_and_console(message, logfile=log_file_name):
     print(message)
     with open(logfile, 'a') as f:
         f.write(message + '\n')
