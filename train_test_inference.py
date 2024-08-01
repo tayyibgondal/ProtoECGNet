@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import os
 
-from settings import base_architecture, experiment_run, img_size, log_dir
+from settings import base_architecture, experiment_run, img_size, log_dir, prototype_shape, label_index_to_label_text_mapping
 
 # Construct the log file name
 log_file_name = os.path.join(log_dir, 'results-' + base_architecture + '-' + experiment_run + '.txt')
@@ -204,7 +204,6 @@ def inference(model, example_path, class_specific=True, prototype_img_folder=Non
     model.eval()
 
     # Define transformations
-    img_size = img_size  
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     transform = transforms.Compose([
         transforms.Resize((img_size, img_size)),
@@ -212,35 +211,39 @@ def inference(model, example_path, class_specific=True, prototype_img_folder=Non
         normalize,
     ])
 
-    
     # Load and transform the image
     image = Image.open(example_path).convert('RGB')
     input_tensor = transform(image).unsqueeze(0).cuda()  # Add batch dimension and move to GPU
-    
+
     output, min_distances = model(input_tensor)
-    predicted_class_label = output.data.max(1)[1]  # get the index of the max log-probability
-    
+    predicted_class_label = output.data.max(1)[1].cpu()  # get the index of the max log-probability and move to CPU
+    predicted_class_label_text = label_index_to_label_text_mapping[predicted_class_label.item()]
+
     # Print the predicted class
     if predicted_class_label == 0:
-        print('Predicted class: Normal')
+        print('Predicted class:', predicted_class_label_text)
     else:
-        print('Predicted class: Abnormal')
-    
+        print('Predicted class:', predicted_class_label_text)
+
     # Plot the original image
     plt.imshow(image)
-    plt.title('Original Image')
+    plt.title('Input Image - Predicted Class: ' + predicted_class_label_text)
     plt.show()
 
     if prototype_img_folder:
         # if class_specific, only show the prototype of the predicted class, otherwise show images of all prototypes
         if class_specific:
+            # compute prototype indices range
+            start_idx = predicted_class_label.item() * 10
+            end_idx = start_idx + prototype_shape[0]
+
+            print(start_idx, end_idx)
             # Plot prototypes of the predicted class only
-            prototype_indices = model.module.prototype_class_identity[predicted_class_label].nonzero().view(-1)
-            for idx in prototype_indices:
-                prototype_img_path = f"{prototype_img_folder}/prototype-{idx.item()}.png"
+            for idx in range(start_idx, end_idx):
+                prototype_img_path = f"{prototype_img_folder}/prototype-img{idx}.png"
                 prototype_img = plt.imread(prototype_img_path)
                 plt.imshow(prototype_img, cmap='gray')
-                plt.title(f'Prototype {idx.item()} for class {predicted_class_label.item()}')
+                plt.title(f'Prototype {idx} for class {predicted_class_label.item()}')
                 plt.show()
         else:
             # Plot all prototypes

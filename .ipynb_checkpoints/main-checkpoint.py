@@ -15,7 +15,7 @@ import numpy as np
 from helpers import makedir
 import model
 import push
-import train_and_test_inference as tnt
+import train_test_inference as tnt
 import save
 from log import create_logger
 from preprocess import mean, std, preprocess_input_function
@@ -39,9 +39,9 @@ shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
 shutil.copy(src=os.path.join(os.getcwd(), 'settings.py'), dst=model_dir)
 shutil.copy(src=os.path.join(os.getcwd(), base_architecture_type + '_features.py'), dst=model_dir)
 shutil.copy(src=os.path.join(os.getcwd(), 'model.py'), dst=model_dir)
-shutil.copy(src=os.path.join(os.getcwd(), 'train_and_test_inference.py'), dst=model_dir)
+shutil.copy(src=os.path.join(os.getcwd(), 'train_test_inference.py'), dst=model_dir)
 
-from train_and_test_inference import log_to_file_and_console
+from train_test_inference import log_to_file_and_console
 log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
 log = log_to_file_and_console  # CHANGE THE LOG FUNCTION
 
