@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import os
 
-from settings import base_architecture, experiment_run, img_size, log_dir, prototype_shape, label_index_to_label_text_mapping
+from settings import base_architecture, experiment_run, img_size, log_dir, prototype_shape, label_index_to_label_text_mapping, num_prototypes_for_each_class
 
 # Construct the log file name
 log_file_name = os.path.join(log_dir, 'results-' + base_architecture + '-' + experiment_run + '.txt')
@@ -145,7 +145,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     log(f'\tF1 Score: {f1:.4f}')
     log(f'\tAUROC: {auroc:.4f}')
 
-    return n_correct / n_examples
+    return n_correct / n_examples, f1, auroc
 
 
 def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
@@ -153,15 +153,16 @@ def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=pr
     
     log('\ttrain')
     model.train()
-    return _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
+    accuracy, f1, auroc = _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
                           class_specific=class_specific, coefs=coefs, log=log)
-
+    return accuracy, f1, auroc
 
 def test(model, dataloader, class_specific=False, log=print):
     log('\ttest')
     model.eval()
-    return _train_or_test(model=model, dataloader=dataloader, optimizer=None,
+    accuracy, f1, auroc = _train_or_test(model=model, dataloader=dataloader, optimizer=None,
                           class_specific=class_specific, log=log)
+    return accuracy, f1, auroc
 
 
 def last_only(model, log=print):
@@ -234,10 +235,9 @@ def inference(model, example_path, class_specific=True, prototype_img_folder=Non
         # if class_specific, only show the prototype of the predicted class, otherwise show images of all prototypes
         if class_specific:
             # compute prototype indices range
-            start_idx = predicted_class_label.item() * 10
-            end_idx = start_idx + prototype_shape[0]
-
-            print(start_idx, end_idx)
+            start_idx = predicted_class_label.item() * num_prototypes_for_each_class
+            end_idx = start_idx + num_prototypes_for_each_class
+            
             # Plot prototypes of the predicted class only
             for idx in range(start_idx, end_idx):
                 prototype_img_path = f"{prototype_img_folder}/prototype-img{idx}.png"

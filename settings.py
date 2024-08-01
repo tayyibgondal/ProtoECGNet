@@ -19,7 +19,8 @@
 base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
 img_size = 224
 num_classes = 2
-num_prototypes = num_classes * 10
+num_prototypes_for_each_class = 10
+num_prototypes = num_classes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
@@ -71,7 +72,12 @@ num_warm_epochs = 5
 push_start = 10
 push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
 
+# useful in inference file
 label_index_to_label_text_mapping = {
     0: 'Normal',
     1: 'Abnormal'
 }
+
+# for saving a trained model checkpoint
+target_auroc = 0.2
+target_f1 = 0.1

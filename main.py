@@ -187,7 +187,7 @@ last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
 from settings import coefs
 
 # number of training epochs, number of warm epochs, push start epoch, push epochs
-from settings import num_train_epochs, num_warm_epochs, push_start, push_epochs
+from settings import num_train_epochs, num_warm_epochs, push_start, push_epochs, target_auroc, target_f1
 
 # train the model
 log('start training')
@@ -205,10 +205,10 @@ for epoch in range(num_train_epochs):
         _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer,
                       class_specific=class_specific, coefs=coefs, log=log)
 
-    accu = tnt.test(model=ppnet_multi, dataloader=test_loader, 
+    accu, f1, auroc = tnt.test(model=ppnet_multi, dataloader=test_loader, 
                     class_specific=class_specific, log=log)
-    save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
-                                target_accu=0.70, log=log)
+    save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', f1=f1,
+                                target_f1=target_f1, auroc=auroc, target_auroc=target_auroc, log=log)
 
     if epoch >= push_start and epoch in push_epochs:
         push.push_prototypes(
@@ -224,10 +224,10 @@ for epoch in range(num_train_epochs):
             proto_bound_boxes_filename_prefix=proto_bound_boxes_filename_prefix,
             save_prototype_class_identity=True,
             log=log)
-        accu = tnt.test(model=ppnet_multi, dataloader=test_loader,  
+        accu, f1, auroc = tnt.test(model=ppnet_multi, dataloader=test_loader,  
                         class_specific=class_specific, log=log)
-        save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', accu=accu,
-                                    target_accu=0.70, log=log)
+        save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'push', f1=f1,
+                                target_f1=target_f1, auroc=auroc, target_auroc=target_auroc, log=log)
  
         if prototype_activation_function != 'linear':
             tnt.last_only(model=ppnet_multi, log=log)
@@ -235,10 +235,9 @@ for epoch in range(num_train_epochs):
                 log('iteration: \t{0}'.format(i))
                 _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                               class_specific=class_specific, coefs=coefs, log=log)
-                accu = tnt.test(model=ppnet_multi, dataloader=test_loader, 
+                accu, f1, auroc = tnt.test(model=ppnet_multi, dataloader=test_loader, 
                                 class_specific=class_specific, log=log)
-                save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
-                                            target_accu=0.70, log=log)
+                save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', f1=f1, target_f1=target_f1, auroc=auroc, target_auroc=target_auroc, log=log)
    
 logclose()
 
