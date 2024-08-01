@@ -1,9 +1,17 @@
 from helpers import list_of_distances, make_one_hot
 
 import numpy as np
+import matplotlib.pyplot as plt
 import time
 import torch
 from sklearn.metrics import f1_score, roc_auc_score,accuracy_score
+
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+
+
+from settings import base_architecture, experiment_run, img_size
 
 log_file_name = 'results-' + base_architecture + '-' + experiment_run + '.txt'
 
@@ -184,3 +192,56 @@ def joint(model, log=print):
         p.requires_grad = True
     
     log('\tjoint')
+
+
+def inference(model, example_path, class_specific=True, prototype_img_folder=None):
+    model.eval()
+
+    # Define transformations
+    img_size = img_size  
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transform = transforms.Compose([
+        transforms.Resize((img_size, img_size)),
+        transforms.ToTensor(),
+        normalize,
+    ])
+
+    
+    # Load and transform the image
+    image = Image.open(example_path).convert('RGB')
+    input_tensor = transform(image).unsqueeze(0).cuda()  # Add batch dimension and move to GPU
+    
+    output, min_distances = model(input_tensor)
+    predicted_class_label = output.data.max(1)[1]  # get the index of the max log-probability
+    
+    # Print the predicted class
+    if predicted_class_label == 0:
+        print('Predicted class: Normal')
+    else:
+        print('Predicted class: Abnormal')
+    
+    # Plot the original image
+    plt.imshow(image)
+    plt.title('Original Image')
+    plt.show()
+
+    if prototype_img_folder:
+        # if class_specific, only show the prototype of the predicted class, otherwise show images of all prototypes
+        if class_specific:
+            # Plot prototypes of the predicted class only
+            prototype_indices = model.module.prototype_class_identity[predicted_class_label].nonzero().view(-1)
+            for idx in prototype_indices:
+                prototype_img_path = f"{prototype_img_folder}/prototype-{idx.item()}.png"
+                prototype_img = plt.imread(prototype_img_path)
+                plt.imshow(prototype_img, cmap='gray')
+                plt.title(f'Prototype {idx.item()} for class {predicted_class_label.item()}')
+                plt.show()
+        else:
+            # Plot all prototypes
+            num_prototypes = model.module.num_prototypes
+            for idx in range(num_prototypes):
+                prototype_img_path = f"{prototype_img_folder}/prototype-{idx}.png"
+                prototype_img = plt.imread(prototype_img_path)
+                plt.imshow(prototype_img, cmap='gray')
+                plt.title(f'Prototype {idx}')
+                plt.show()
