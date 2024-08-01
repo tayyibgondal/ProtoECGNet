@@ -248,8 +248,12 @@ def update_prototypes_on_batch(search_batch_input,
                                              interpolation=cv2.INTER_CUBIC)
             proto_bound_j = find_high_activation_crop(upsampled_act_img_j)
             # crop out the image patch with high activation as prototype image
-            proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1],
-                                         proto_bound_j[2]:proto_bound_j[3], :]
+            # proto_img_j = original_img_j[proto_bound_j[0]:proto_bound_j[1],
+            #                              proto_bound_j[2]:proto_bound_j[3], :]
+            # --------------------------------------------
+            # CHANGE THE PROTOTYPE TO BE THE WHOLE IMAGE 
+            proto_img_j = original_img_j
+            # --------------------------------------------
 
             # save the prototype boundary (rectangular boundary of highly activated region)
             proto_bound_boxes[j, 0] = proto_rf_boxes[j, 0]
@@ -261,45 +265,45 @@ def update_prototypes_on_batch(search_batch_input,
                 proto_bound_boxes[j, 5] = search_y[rf_prototype_j[0]].item()
 
             if dir_for_saving_prototypes is not None:
-                if prototype_self_act_filename_prefix is not None:
-                    # save the numpy array of the prototype self activation
-                    np.save(os.path.join(dir_for_saving_prototypes,
-                                         prototype_self_act_filename_prefix + str(j) + '.npy'),
-                            proto_act_img_j)
+                # if prototype_self_act_filename_prefix is not None:
+                #     # save the numpy array of the prototype self activation
+                #     np.save(os.path.join(dir_for_saving_prototypes,
+                #                          prototype_self_act_filename_prefix + str(j) + '.npy'),
+                #             proto_act_img_j)
                 if prototype_img_filename_prefix is not None:
-                    # save the whole image containing the prototype as png
-                    plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original' + str(j) + '.png'),
-                               original_img_j,
-                               vmin=0.0,
-                               vmax=1.0)
-                    # overlay (upsampled) self activation on original image and save the result
-                    rescaled_act_img_j = upsampled_act_img_j - np.amin(upsampled_act_img_j)
-                    rescaled_act_img_j = rescaled_act_img_j / np.amax(rescaled_act_img_j)
-                    heatmap = cv2.applyColorMap(np.uint8(255*rescaled_act_img_j), cv2.COLORMAP_JET)
-                    heatmap = np.float32(heatmap) / 255
-                    heatmap = heatmap[...,::-1]
-                    overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
-                    plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'),
-                               overlayed_original_img_j,
-                               vmin=0.0,
-                               vmax=1.0)
+                    # # save the whole image containing the prototype as png
+                    # plt.imsave(os.path.join(dir_for_saving_prototypes,
+                    #                         prototype_img_filename_prefix + '-original' + str(j) + '.png'),
+                    #            original_img_j,
+                    #            vmin=0.0,
+                    #            vmax=1.0)
+                    # # overlay (upsampled) self activation on original image and save the result
+                    # rescaled_act_img_j = upsampled_act_img_j - np.amin(upsampled_act_img_j)
+                    # rescaled_act_img_j = rescaled_act_img_j / np.amax(rescaled_act_img_j)
+                    # heatmap = cv2.applyColorMap(np.uint8(255*rescaled_act_img_j), cv2.COLORMAP_JET)
+                    # heatmap = np.float32(heatmap) / 255
+                    # heatmap = heatmap[...,::-1]
+                    # overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
+                    # plt.imsave(os.path.join(dir_for_saving_prototypes,
+                    #                         prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'),
+                    #            overlayed_original_img_j,
+                    #            vmin=0.0,
+                    #            vmax=1.0)
                     
                     # if different from the original (whole) image, save the prototype receptive field as png
-                    if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
-                        plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'),
-                                   rf_img_j,
-                                   vmin=0.0,
-                                   vmax=1.0)
-                        overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
-                                                                      rf_prototype_j[3]:rf_prototype_j[4]]
-                        plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                                prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
-                                   overlayed_rf_img_j,
-                                   vmin=0.0,
-                                   vmax=1.0)
+                    # if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
+                    #     plt.imsave(os.path.join(dir_for_saving_prototypes,
+                    #                             prototype_img_filename_prefix + '-receptive_field' + str(j) + '.png'),
+                    #                rf_img_j,
+                    #                vmin=0.0,
+                    #                vmax=1.0)
+                    #     overlayed_rf_img_j = overlayed_original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
+                    #                                                   rf_prototype_j[3]:rf_prototype_j[4]]
+                    #     plt.imsave(os.path.join(dir_for_saving_prototypes,
+                    #                             prototype_img_filename_prefix + '-receptive_field_with_self_act' + str(j) + '.png'),
+                    #                overlayed_rf_img_j,
+                    #                vmin=0.0,
+                    #                vmax=1.0)
                     
                     # save the prototype image (highly activated region of the whole image)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,

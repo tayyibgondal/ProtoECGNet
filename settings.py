@@ -16,7 +16,7 @@
 #                                  'vgg19': vgg19_features,
 #                                  'vgg19_bn': vgg19_bn_features}
 
-base_architecture = 'resnet18'  # Choose one of keys from above dictionary
+base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
 img_size = 224
 prototype_shape = (60, 128, 1, 1)
 num_classes = 2
