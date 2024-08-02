@@ -43,8 +43,8 @@ test_batch_size = 100
 train_push_batch_size = 75
 
 # Specify the number of examples to load (set them to None to load all examples)
-num_train_examples = 100  
-num_test_examples = 50 
+num_train_examples = None  
+num_test_examples = None 
 
 # Logging directory for results
 log_dir = 'logs'
@@ -79,5 +79,5 @@ label_index_to_label_text_mapping = {
 }
 
 # for saving a trained model checkpoint
-target_auroc = 0.2
-target_f1 = 0.1
+target_auroc = 0.92
+target_f1 = 0.84

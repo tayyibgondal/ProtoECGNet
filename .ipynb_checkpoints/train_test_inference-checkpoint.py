@@ -10,6 +10,7 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 import os
+import wandb
 
 from settings import base_architecture, experiment_run, img_size, log_dir, prototype_shape, label_index_to_label_text_mapping, num_prototypes_for_each_class
 
@@ -145,7 +146,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     log(f'\tF1 Score: {f1:.4f}')
     log(f'\tAUROC: {auroc:.4f}')
 
-    return n_correct / n_examples, f1, auroc
+    return n_correct / n_examples, f1, auroc, total_cross_entropy / n_batches, total_cluster_cost / n_batches, total_separation_cost / n_batches, total_avg_separation_cost / n_batches, model.module.last_layer.weight.norm(p=1).item(), p_avg_pair_dist.item()
 
 
 def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
@@ -153,15 +154,43 @@ def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=pr
     
     log('\ttrain')
     model.train()
-    accuracy, f1, auroc = _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
+    accuracy, f1, auroc, ce, cc, sc, avg_sc, l1, p_pair_dist = _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
                           class_specific=class_specific, coefs=coefs, log=log)
+
+    # Log metrics to WandB
+    wandb.log({
+        "Train Accuracy": accuracy * 100,
+        "Train F1 Score": f1,
+        "Train AUROC": auroc,
+        "Train Cross Entropy": ce,
+        "Train Cluster Cost": cc,
+        "Train Separation Cost": sc if class_specific else 0,
+        "Train Avg Separation Cost": avg_sc if class_specific else 0,
+        "Train L1 Norm": l1,
+        "Train P Dist Pair": p_pair_dist
+    })
+    
     return accuracy, f1, auroc
 
 def test(model, dataloader, class_specific=False, log=print):
     log('\ttest')
     model.eval()
-    accuracy, f1, auroc = _train_or_test(model=model, dataloader=dataloader, optimizer=None,
+    accuracy, f1, auroc, ce, cc, sc, avg_sc, l1, p_pair_dist = _train_or_test(model=model, dataloader=dataloader, optimizer=None,
                           class_specific=class_specific, log=log)
+
+    # Log metrics to WandB
+    wandb.log({
+        "Test Accuracy": accuracy * 100,
+        "Test F1 Score": f1,
+        "Test AUROC": auroc,
+        "Test Cross Entropy": ce,
+        "Test Cluster Cost": cc,
+        "Test Separation Cost": sc if class_specific else 0,
+        "Test Avg Separation Cost": avg_sc if class_specific else 0,
+        "Test L1 Norm": l1,
+        "Test P Dist Pair": p_pair_dist
+    })
+    
     return accuracy, f1, auroc
 
 

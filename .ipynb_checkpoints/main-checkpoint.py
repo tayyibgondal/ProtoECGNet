@@ -20,9 +20,13 @@ import save
 from log import create_logger
 from preprocess import mean, std, preprocess_input_function
 
+import wandb
+wandb.login()
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-gpuid', nargs=1, type=str, default='0') # python3 main.py -gpuid=0,1,2,3
 parser.add_argument('-base', nargs=1, type=str, default='vgg19') 
+parser.add_argument('-experiment_run', nargs=1, type=str, default='0') 
 args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
 print(os.environ['CUDA_VISIBLE_DEVICES'])
@@ -86,10 +90,6 @@ def create_subset(dataset, num_examples):
 train_dataset = ECGImageDataset(train_df, data_dir, transform=transform)
 test_dataset = ECGImageDataset(test_df, data_dir, transform=transform)
 
-# Specify the number of examples to load
-num_train_examples = 100  
-num_test_examples = 50 
-
 if num_train_examples is not None:
     train_subset = create_subset(train_dataset, num_train_examples)
 else: 
@@ -150,6 +150,7 @@ log('batch size: {0}'.format(train_batch_size))
 
 # construct the model
 base_architecture = args.base[0]
+experiment_run = args.experiment_run[0]
 ppnet = model.construct_PPNet(base_architecture=base_architecture,
                               pretrained=True, img_size=img_size,
                               prototype_shape=prototype_shape,
@@ -192,6 +193,17 @@ from settings import num_train_epochs, num_warm_epochs, push_start, push_epochs,
 # train the model
 log('start training')
 import copy
+
+run = wandb.init(
+    # Set the project where this run will be logged
+    project="ExplainableECGModels",
+    # Track hyperparameters and run metadata
+    config={
+        "backend": base_architecture,
+        "experiment_run": experiment_run
+    },
+)
+
 for epoch in range(num_train_epochs):
     log('epoch: \t{0}'.format(epoch))
 
