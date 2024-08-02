@@ -32,11 +32,12 @@ os.environ['CUDA_VISIBLE_DEVICES'] = args.gpuid[0]
 print(os.environ['CUDA_VISIBLE_DEVICES'])
 
 # book keeping namings and code
-from settings import base_architecture, img_size, prototype_shape, num_classes, \
-                     prototype_activation_function, add_on_layers_type, experiment_run
+from settings import img_size, prototype_shape, num_classes, \
+                     prototype_activation_function, add_on_layers_type
+base_architecture = args.base[0]
+experiment_run = args.experiment_run[0]
 
 base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
-
 model_dir = './saved_models/' + base_architecture + '/' + experiment_run + '/'
 makedir(model_dir)
 shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
@@ -149,8 +150,6 @@ log('training set size: {0}'.format(len(train_loader.dataset)))
 log('batch size: {0}'.format(train_batch_size))
 
 # construct the model
-base_architecture = args.base[0]
-experiment_run = args.experiment_run[0]
 ppnet = model.construct_PPNet(base_architecture=base_architecture,
                               pretrained=True, img_size=img_size,
                               prototype_shape=prototype_shape,
