@@ -16,7 +16,10 @@
 #                                  'vgg19': vgg19_features,
 #                                  'vgg19_bn': vgg19_bn_features}
 
+# DISCLAIMER: The following two are not used from settings.py, SPECIFY VIA TERMINAL BEFORE RUNNING THE MAIN.PY
 base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
+experiment_run = '001'
+
 img_size = 224
 num_classes = 2
 num_prototypes_for_each_class = 10
@@ -25,7 +28,6 @@ prototype_shape = (num_prototypes, 128, 1, 1)
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
 
-experiment_run = '001'
 
 data_path = ''  #TODO: Not USED, REMOVE IMPORTS FROM FILES
 test_dir = data_path + 'test/' #TODO: Not USED, REMOVE IMPORTS FROM FILES
