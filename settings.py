@@ -21,7 +21,7 @@ base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
 experiment_run = '001'
 
 img_size = 224
-num_classes = 2
+num_classes = 5
 num_prototypes_for_each_class = 10
 num_prototypes = num_classes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)
@@ -39,6 +39,10 @@ csv_file_for_labels = '../../../data/padmalab_external/special_project/physionet
 # Path to the image directory
 data_dir = '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/records100_ground_truth'
 train_dir = data_path + '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/records100_ground_truth'
+
+# Following two settings are specifically for classification of 5 super classes
+scp_statements_path = '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/scp_statements.csv'
+ptb_database_file_path = '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/ptbxl_database.csv'
 
 train_batch_size = 80
 test_batch_size = 100
