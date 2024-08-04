@@ -11,13 +11,13 @@ Experiment 2 settings:
     prototype_shape = (num_prototypes, 216, 1, 1)  
 
 # Done
-Experiment 3 settings:
+Experiment 3 settings:              # ---------------- GOOD SETTING ------------------
     img_size = 224  
     num_prototypes_for_each_class = 1
     prototype_shape = (num_prototypes, 128, 1, 1) 
 
 # Done
-Experiment 4 settings:
+Experiment 4 settings:               # ---------------- GOOD SETTING ------------------
     img_size = 224  
     num_prototypes_for_each_class = 32
     prototype_shape = (num_prototypes, 128, 1, 1) 
@@ -28,9 +28,16 @@ Experiment 5 settings:
     num_prototypes_for_each_class = 64
     prototype_shape = (num_prototypes, 128, 1, 1) 
 
-# Running
+# Done
 Experiment 6 settings:
     img_size = 224  
     num_prototypes_for_each_class = 32  
     prototype_shape = (num_prototypes, 128, 1, 1)  
-    MA
+    (MACRO AUROC)
+
+# Running
+Experiment 7 settings:
+    img_size = 224  
+    num_prototypes_for_each_class = 1
+    prototype_shape = (num_prototypes, 128, 1, 1) 
+    (MACRO AUROC)

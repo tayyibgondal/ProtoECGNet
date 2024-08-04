@@ -25,7 +25,7 @@ experiment_run = '001'
 
 img_size = 224  # MANIPULATE ?
 num_classes = 5
-num_prototypes_for_each_class = 32  # MANIPULATE ?
+num_prototypes_for_each_class = 1  # MANIPULATE ?
 num_prototypes = num_classes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
 prototype_activation_function = 'log'
