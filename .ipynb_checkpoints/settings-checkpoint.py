@@ -1,4 +1,6 @@
 # TODO: FIX LOGS BUG
+# TODO: LOWER THE THRESHOLD FOR SAVING THE MODELS
+# TODO: GET MACRO AUROCS AS WELL
 # base_architecture_to_features = {'resnet18': resnet18_features,
 #                                  'resnet34': resnet34_features,
 #                                  'resnet50': resnet50_features,
@@ -23,7 +25,7 @@ experiment_run = '001'
 
 img_size = 224  # MANIPULATE ?
 num_classes = 5
-num_prototypes_for_each_class = 1  # MANIPULATE ?
+num_prototypes_for_each_class = 32  # MANIPULATE ?
 num_prototypes = num_classes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
 prototype_activation_function = 'log'
@@ -90,4 +92,4 @@ label_index_to_label_text_mapping = {'CD': 0, 'HYP': 1, 'MI': 2, 'NORM': 3, 'STT
 
 # for saving a trained model checkpoint
 target_auroc = 0.80
-target_f1 = 0.80
+target_f1 = 0.70
