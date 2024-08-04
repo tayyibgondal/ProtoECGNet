@@ -1,3 +1,4 @@
+# TODO: FIX LOGS BUG
 # base_architecture_to_features = {'resnet18': resnet18_features,
 #                                  'resnet34': resnet34_features,
 #                                  'resnet50': resnet50_features,
@@ -20,11 +21,11 @@
 base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
 experiment_run = '001'
 
-img_size = 224
+img_size = 224  # MANIPULATE ?
 num_classes = 5
-num_prototypes_for_each_class = 10
+num_prototypes_for_each_class = 1  # MANIPULATE ?
 num_prototypes = num_classes * num_prototypes_for_each_class
-prototype_shape = (num_prototypes, 128, 1, 1)
+prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
 
@@ -49,8 +50,8 @@ test_batch_size = 100
 train_push_batch_size = 75
 
 # Specify the number of examples to load (set them to None to load all examples)
-num_train_examples = 100  
-num_test_examples = 100 
+num_train_examples = None  
+num_test_examples = None 
 
 # Logging directory for results
 log_dir = 'logs'
@@ -79,11 +80,14 @@ push_start = 10
 push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
 
 # useful in inference file
-label_index_to_label_text_mapping = {
-    0: 'Normal',
-    1: 'Abnormal'
-}
+# # For two classes only
+# label_index_to_label_text_mapping = {
+#     0: 'Normal',
+#     1: 'Abnormal'
+# }
+# For 5 classes
+label_index_to_label_text_mapping = {'CD': 0, 'HYP': 1, 'MI': 2, 'NORM': 3, 'STTC': 4}
 
 # for saving a trained model checkpoint
-target_auroc = 0.92
-target_f1 = 0.84
+target_auroc = 0.80
+target_f1 = 0.80

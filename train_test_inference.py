@@ -140,6 +140,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     all_scores = np.array(all_scores)
     accuracy = accuracy_score(all_labels, [score.argmax() for score in all_scores])
     f1 = f1_score(all_labels, [score.argmax() for score in all_scores], average='weighted')
+
     auroc = roc_auc_score(all_labels, all_scores, multi_class='ovr', average='weighted')
 
     log(f'\tAccuracy: {accuracy * 100:.2f}%')

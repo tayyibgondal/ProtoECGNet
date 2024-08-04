@@ -3,3 +3,5 @@ saved_models/
 __pycache__/
 logs/
 wandb/
+train-100HZ-files-and-labels.csv
+test-100HZ-files-and-labels.csv

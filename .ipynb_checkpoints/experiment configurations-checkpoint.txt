@@ -1,0 +1,15 @@
+Experiment 1 settings:
+    img_size = 224  
+    num_prototypes_for_each_class = 10  
+    prototype_shape = (num_prototypes, 128, 1, 1)  
+
+Experiment 2 settings:
+    img_size = 448  
+    num_prototypes_for_each_class = 10  
+    prototype_shape = (num_prototypes, 216, 1, 1)  
+
+Experiment 3 settings:
+    img_size = 224  
+    num_prototypes_for_each_class = 1
+    prototype_shape = (num_prototypes, 128, 1, 1) 
+    
