@@ -16,16 +16,18 @@
 #                                  'vgg19': vgg19_features,
 #                                  'vgg19_bn': vgg19_bn_features}
 
+# DISCLAIMER: The following two are not used from settings.py, SPECIFY VIA TERMINAL BEFORE RUNNING THE MAIN.PY
 base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
+experiment_run = '001'
+
 img_size = 224
-num_classes = 2
+num_classes = 5
 num_prototypes_for_each_class = 10
 num_prototypes = num_classes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
 
-experiment_run = '001'
 
 data_path = ''  #TODO: Not USED, REMOVE IMPORTS FROM FILES
 test_dir = data_path + 'test/' #TODO: Not USED, REMOVE IMPORTS FROM FILES
@@ -38,13 +40,17 @@ csv_file_for_labels = '../../../data/padmalab_external/special_project/physionet
 data_dir = '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/records100_ground_truth'
 train_dir = data_path + '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/records100_ground_truth'
 
+# Following two settings are specifically for classification of 5 super classes
+train_information = 'train-100HZ-files-and-labels.csv'
+test_information = 'test-100HZ-files-and-labels.csv'
+
 train_batch_size = 80
 test_batch_size = 100
 train_push_batch_size = 75
 
 # Specify the number of examples to load (set them to None to load all examples)
-num_train_examples = None  
-num_test_examples = None 
+num_train_examples = 100  
+num_test_examples = 100 
 
 # Logging directory for results
 log_dir = 'logs'
