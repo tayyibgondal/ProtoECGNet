@@ -107,6 +107,7 @@ def main():
     parser = argparse.ArgumentParser(description='Train ECG model')
     parser.add_argument('-gpuid', type=int, default=0, help='GPU id to use')
     parser.add_argument('-experiment_run', type=int, default=0)
+    parser.add_argument("-run_name", type=str, default="default_run_name", help="Name of the W&B run")
     args = parser.parse_args()
 
     device = torch.device(f"cuda:{args.gpuid}" if torch.cuda.is_available() else "cpu")
@@ -114,6 +115,7 @@ def main():
     run = wandb.init(
     # Set the project where this run will be logged
     project="ExplainableECGModels",
+    name=args.run_name,
     # Track hyperparameters and run metadata
     config={
         "experiment_run": args.experiment_run

@@ -1,4 +1,4 @@
-img_size = 224
+img_size = 240
 
 num_train_examples = None
 num_test_examples = None

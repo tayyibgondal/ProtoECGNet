@@ -1,36 +1,38 @@
-import os
-import argparse
-import torch
-from torch.utils.data import Dataset, DataLoader
-from PIL import Image
-import torchvision.transforms as transforms
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-import copy
 import torch.nn as nn
+import torch
 import torch.nn.functional as F
-from dataset_class_for_superclasses import ECGImageDataset
+from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as transforms
+import torch.optim as optim
+import os
+import ast
+import pandas as pd
 import numpy as np
+from PIL import Image
+from sklearn.preprocessing import LabelEncoder
+import copy
+from sklearn.metrics import roc_auc_score, f1_score, accuracy_score
 from tqdm import tqdm
-from vgg_11 import VGG11Classifier  
+import argparse
+from model import VGG_Classifier
+from dataset_class_for_superclasses import ECGImageDataset
 
 import wandb
 wandb.login()
 
-from settings import img_size, num_train_examples, num_test_examples, num_classes, input_channels, lr, num_epochs, train_batch_size, test_batch_size
-
-# Define the data transformations
-data_transform = transforms.Compose([
-    transforms.Resize((img_size, img_size)),  # Resize image to 224x224
-    transforms.ToTensor()                    # Convert image to Tensor
-])
+from settings import img_size, num_train_examples, num_test_examples, num_classes, lr, num_epochs, train_batch_size, test_batch_size, train_df, val_df
 
 # Function to create a subset of the dataset
 def create_subset(dataset, num_examples):
+    # Ensure num_examples doesn't exceed the dataset length
     num_examples = min(len(dataset), num_examples)
     indices = np.random.choice(len(dataset), num_examples, replace=False)
     subset = torch.utils.data.Subset(dataset, indices)
     return subset
 
+# ===========================================================
+# Training Function
+# ===========================================================
 def train_model(model, criterion, optimizer, dataloaders, dataset_sizes, device, num_epochs=25):
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -38,9 +40,9 @@ def train_model(model, criterion, optimizer, dataloaders, dataset_sizes, device,
     for epoch in range(num_epochs):
         for phase in ['train', 'val']:
             if phase == 'train':
-                model.train()
+                model.train()  # Set model to training mode
             else:
-                model.eval()
+                model.eval()   # Set model to evaluate mode
 
             running_loss = 0.0
             running_corrects = 0
@@ -96,53 +98,78 @@ def train_model(model, criterion, optimizer, dataloaders, dataset_sizes, device,
     return model
 
 def main():
-    parser = argparse.ArgumentParser(description='Train ECG model with VGG11')
+    parser = argparse.ArgumentParser(description='Train ECG model')
     parser.add_argument('-gpuid', type=int, default=0, help='GPU id to use')
+    parser.add_argument('-base', nargs=1, type=str, default='vgg19') 
     parser.add_argument('-experiment_run', type=int, default=0)
+    parser.add_argument("-run_name", type=str, default="default_run_name", help="Name of the W&B run")
     args = parser.parse_args()
 
     device = torch.device(f"cuda:{args.gpuid}" if torch.cuda.is_available() else "cpu")
     
     run = wandb.init(
-        project="ExplainableECGModels",
-        config={
-            "experiment_run": args.experiment_run
+    # Set the project where this run will be logged
+    project="ExplainableECGModels",
+    name=args.run_name,
+    # Track hyperparameters and run metadata
+    config={
+        "experiment_run": args.experiment_run
         },
     )
 
-    train_dataset = ECGImageDataset(info_df_path='train-100HZ-files-and-labels.csv', transform=data_transform)
-    val_dataset = ECGImageDataset(info_df_path='test-100HZ-files-and-labels.csv', transform=data_transform)
-
+    # ===========================================================
+    # Define transformations
+    # ===========================================================
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transform = transforms.Compose([
+        transforms.Resize((img_size, img_size)),
+        transforms.ToTensor(),
+        normalize,
+    ])
+    
+    # ===========================================================
+    # Load datasets, and create dataloaders
+    # ===========================================================    
+    # Create train and test datasets
+    train_dataset = ECGImageDataset(train_df, transform=transform)
+    val_dataset = ECGImageDataset(val_df, transform=transform)
+    
     if num_train_examples is not None:
         train_subset = create_subset(train_dataset, num_train_examples)
-    else:
+    else: 
         train_subset = train_dataset
-
+    
     if num_test_examples is not None:
         val_subset = create_subset(val_dataset, num_test_examples)
     else:
         val_subset = val_dataset
+    
+    # Create data loaders for the subsets
+    train_loader = torch.utils.data.DataLoader(train_subset, batch_size=train_batch_size, shuffle=True, num_workers=4, pin_memory=False)
+    val_loader = torch.utils.data.DataLoader(val_subset, batch_size=test_batch_size, shuffle=True, num_workers=4, pin_memory=False)
 
-    train_loader = DataLoader(train_subset, batch_size=train_batch_size, shuffle=True)
-    val_loader = DataLoader(val_subset, batch_size=test_batch_size, shuffle=False)
-
+    # ===========================================================
+    # Call the train function
+    # ===========================================================
     dataloaders = {
         'train': train_loader,
         'val': val_loader
     }
-
-    # Initialize VGG11 model
-    model = VGG11Classifier(num_classes=num_classes, pretrained=True).to(device)
-
+    
+    # Initialize model, criterion, optimizer
+    model = VGG_Classifier('vgg11', num_classes=num_classes).to(device) 
+    
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-
+    
+    # Define dataset sizes
     dataset_sizes = {
-        'train': len(train_subset),
-        'val': len(val_subset)
+        'train': len(train_dataset),
+        'val': len(val_dataset)
     }
 
-    model = train_model(model, criterion, optimizer, dataloaders, dataset_sizes, device, num_epochs=num_epochs)
-
+    # Train the model
+    model = train_model(model, criterion, optimizer, dataloaders, dataset_sizes, device, num_epochs=25)
+        
 if __name__ == "__main__":
     main()
