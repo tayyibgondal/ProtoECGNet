@@ -1,0 +1,3 @@
+exp 1: cross ent high (3)
+exp 2: no push 
+exp 3: increase protos 512
