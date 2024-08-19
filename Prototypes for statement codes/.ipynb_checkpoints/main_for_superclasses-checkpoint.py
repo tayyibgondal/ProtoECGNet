@@ -64,11 +64,10 @@ from settings import train_dir, test_dir, train_push_dir, \
                      train_batch_size, test_batch_size, train_push_batch_size
 # ---------------------------------------------------------------
 # Updated data loader code
-from settings import train_information, test_information, data_dir, num_train_examples, num_test_examples
+from settings import train_information, test_information, data_dir, num_train_examples, num_test_examples, img_size
 from dataset_class import ECGImageDataset
 
 # Define transformations
-img_size = 224  # or whatever size you want
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 transform = transforms.Compose([
     transforms.Resize((img_size, img_size)),

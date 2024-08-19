@@ -1,0 +1,28 @@
+exp1: 
+        img_size = 224  # MANIPULATE ?
+        num_classes = 5
+        num_scp_codes = 71
+        num_prototypes_for_each_class = 32  # MANIPULATE ?
+        num_prototypes = num_scp_codes * num_prototypes_for_each_class
+        prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
+
+exp2:  
+        increase image size to 500
+        increase prototype size to 256
+
+exp3: 
+        same as exp2
+        a denser classification head
+
+exp4: 
+        same as exp1
+        a denser classification head
+
+exp5:
+        same as exp1
+        add_on_layers_type = 'bottleneck'
+
+exp6:
+        same as exp1
+        num_protos_per_class = 1
+

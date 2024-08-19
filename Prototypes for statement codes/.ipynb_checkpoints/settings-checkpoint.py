@@ -29,7 +29,7 @@ num_prototypes_for_each_class = 32  # MANIPULATE ?
 num_prototypes = num_scp_codes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
 prototype_activation_function = 'log'
-add_on_layers_type = 'regular'
+add_on_layers_type = 'bottleneck'
 
 
 data_path = ''  #TODO: Not USED, REMOVE IMPORTS FROM FILES

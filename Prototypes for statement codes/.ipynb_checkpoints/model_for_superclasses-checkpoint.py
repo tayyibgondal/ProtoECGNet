@@ -116,6 +116,13 @@ class PPNet(nn.Module):
 
         self.last_layer = nn.Linear(self.num_prototypes, self.num_classes,
                                     bias=False) # do not use bias
+    #     self.last_layer = nn.Sequential(
+    #     nn.Linear(self.num_prototypes, 64, bias=False),
+    #     nn.ReLU(),
+    #     nn.Linear(64, 32, bias=False),
+    #     nn.ReLU(),
+    #     nn.Linear(32, self.num_classes, bias=False)  # Last layer without bias
+    # )
 
         if init_weights:
             self._initialize_weights()

@@ -96,7 +96,10 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
             else:
                 min_distance, _ = torch.min(min_distances, dim=1)  # (batch, 1)
                 cluster_cost = torch.mean(min_distance)
+                # -----------------------------
                 l1 = model.module.last_layer.weight.norm(p=1)
+                # -----------------------------
+
 
             n_examples += target.size(0)
             n_batches += 1
@@ -116,14 +119,21 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                           + coefs['clst'] * cluster_cost
                           + coefs['sep'] * separation_cost
                           + coefs['l1'] * l1)
+                    # loss = (coefs['crs_ent'] * cross_entropy
+                    #       + coefs['clst'] * cluster_cost
+                    #       + coefs['sep'] * separation_cost)
                 else:
                     loss = cross_entropy + 0.8 * cluster_cost - 0.08 * separation_cost + 1e-4 * l1
+                    # loss = cross_entropy + 0.8 * cluster_cost - 0.08 * separation_cost
             else:
                 if coefs is not None:
+                    # loss = (coefs['crs_ent'] * cross_entropy
+                    #       + coefs['clst'] * cluster_cost)
                     loss = (coefs['crs_ent'] * cross_entropy
                           + coefs['clst'] * cluster_cost
                           + coefs['l1'] * l1)
                 else:
+                    # loss = cross_entropy + 0.8 * cluster_cost
                     loss = cross_entropy + 0.8 * cluster_cost + 1e-4 * l1
             optimizer.zero_grad()
             loss.backward()
@@ -141,7 +151,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     log(f'\tcluster: \t{total_cluster_cost / n_batches}')
     if class_specific:
         log(f'\tseparation:\t{total_separation_cost / n_batches}')
-    log(f'\tl1: \t\t{model.module.last_layer.weight.norm(p=1).item()}')
+    # log(f'\tl1: \t\t{model.module.last_layer.weight.norm(p=1).item()}')
     p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(list_of_distances(p, p))
@@ -154,7 +164,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     auroc = roc_auc_score(all_labels_np, all_scores_np, average="macro")
     log(f'\tAUROC: {auroc:.4f}')
 
-    return auroc, total_cross_entropy / n_batches, total_cluster_cost / n_batches, total_separation_cost / n_batches, model.module.last_layer.weight.norm(p=1).item(), p_avg_pair_dist.item()
+    return auroc, total_cross_entropy / n_batches, total_cluster_cost / n_batches, total_separation_cost / n_batches, p_avg_pair_dist.item()
 
 
 def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
@@ -162,7 +172,7 @@ def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=pr
     
     log('\ttrain')
     model.train()
-    auroc, ce, cc, sc, l1, p_pair_dist = _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
+    auroc, ce, cc, sc, p_pair_dist = _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
                           class_specific=class_specific, coefs=coefs, log=log)
 
     # Log metrics to WandB
@@ -171,7 +181,6 @@ def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=pr
         "Train Cross Entropy": ce,
         "Train Cluster Cost": cc,
         "Train Separation Cost": sc if class_specific else 0,
-        "Train L1 Norm": l1,
         "Train P Dist Pair": p_pair_dist
     })
     
@@ -180,7 +189,7 @@ def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=pr
 def test(model, dataloader, class_specific=False, log=print):
     log('\ttest')
     model.eval()
-    auroc, ce, cc, sc, l1, p_pair_dist = _train_or_test(model=model, dataloader=dataloader, optimizer=None,
+    auroc, ce, cc, sc, p_pair_dist = _train_or_test(model=model, dataloader=dataloader, optimizer=None,
                           class_specific=class_specific, log=log)
 
     # Log metrics to WandB
@@ -189,7 +198,6 @@ def test(model, dataloader, class_specific=False, log=print):
         "Test Cross Entropy": ce,
         "Test Cluster Cost": cc,
         "Test Separation Cost": sc if class_specific else 0,
-        "Test L1 Norm": l1,
         "Test P Dist Pair": p_pair_dist
     })
     
