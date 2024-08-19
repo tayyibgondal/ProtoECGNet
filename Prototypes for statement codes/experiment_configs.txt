@@ -26,3 +26,13 @@ exp6:
         same as exp1
         num_protos_per_class = 1
 
+
+exp7:   same as exp1
+        increase image size to 500
+        increase proto size to 256
+        change push start to 15
+        NOTE: CLUSTER COST UPDATED
+
+exp8:   same as exp1
+        NOTE: CLUSTER COST UPDATED
+        

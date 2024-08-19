@@ -12,7 +12,7 @@ from PIL import Image
 import os
 import wandb
 
-from settings import base_architecture, experiment_run, img_size, log_dir, prototype_shape, label_index_to_label_text_mapping, num_prototypes_for_each_class
+from settings import base_architecture, experiment_run, img_size, log_dir, prototype_shape, num_prototypes_for_each_class
 
 # Construct the log file name
 log_file_name = os.path.join(log_dir, 'results-' + base_architecture + '-' + experiment_run + '.txt')
@@ -72,7 +72,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                 # (max_dis-min_dis) * proto_of_corr_class --> extract the distances of only those prototypes which are activated, for a particular example in the batch
                 # torch.max will then extract the maximum inverted distanced prototype (or activated prototype) out of all the prototypes 
                 # for multi labeled problem, we would do sum rather than max.
-                inverted_distances = torch.sum((max_dist - min_distances) * prototypes_of_correct_class, dim=1)  # (batch_size,)
+                inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)  # (batch_size,)
                 # inverted_distance represents the inverted_distance of that prototype, which corresponds to the true label.
                 
                 cluster_cost = torch.mean(max_dist - inverted_distances) 

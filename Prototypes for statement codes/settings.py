@@ -29,20 +29,9 @@ num_prototypes_for_each_class = 32  # MANIPULATE ?
 num_prototypes = num_scp_codes * num_prototypes_for_each_class
 prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
 prototype_activation_function = 'log'
-add_on_layers_type = 'bottleneck'
-
-
-data_path = ''  #TODO: Not USED, REMOVE IMPORTS FROM FILES
-test_dir = data_path + 'test/' #TODO: Not USED, REMOVE IMPORTS FROM FILES
-train_push_dir = data_path + 'train/' #TODO: Not USED, REMOVE IMPORTS FROM FILES
+add_on_layers_type = 'regular'
 
 # ----------------------------------------
-# Path to the CSV file
-csv_file_for_labels = '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/ptbxl_train_label_df.csv'
-# Path to the image directory
-data_dir = '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/records100_ground_truth'
-train_dir = data_path + '../../../data/padmalab_external/special_project/physionet.org/files/ptb-xl/1.0.3/records100_ground_truth'
-
 # Following two settings are specifically for classification of 5 super classes
 train_information = 'train-100.json'
 test_information = 'test-100.json'
@@ -81,15 +70,5 @@ num_warm_epochs = 5
 push_start = 10
 push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
 
-# useful in inference file
-# # For two classes only
-# label_index_to_label_text_mapping = {
-#     0: 'Normal',
-#     1: 'Abnormal'
-# }
-# For 5 classes
-label_index_to_label_text_mapping = {'CD': 0, 'HYP': 1, 'MI': 2, 'NORM': 3, 'STTC': 4}
-
 # for saving a trained model checkpoint
-target_auroc = 0.85
-target_f1 = 0.70
+target_auroc = 0.90

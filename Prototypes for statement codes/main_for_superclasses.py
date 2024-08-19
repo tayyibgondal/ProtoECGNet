@@ -60,11 +60,10 @@ prototype_self_act_filename_prefix = 'prototype-self-act'
 proto_bound_boxes_filename_prefix = 'bb'
 
 # load the data
-from settings import train_dir, test_dir, train_push_dir, \
-                     train_batch_size, test_batch_size, train_push_batch_size
+from settings import train_batch_size, test_batch_size, train_push_batch_size
 # ---------------------------------------------------------------
 # Updated data loader code
-from settings import train_information, test_information, data_dir, num_train_examples, num_test_examples, img_size
+from settings import train_information, test_information, num_train_examples, num_test_examples, img_size
 from dataset_class import ECGImageDataset
 
 # Define transformations
@@ -146,7 +145,7 @@ last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
 from settings import coefs
 
 # number of training epochs, number of warm epochs, push start epoch, push epochs
-from settings import num_train_epochs, num_warm_epochs, push_start, push_epochs, target_auroc, target_f1
+from settings import num_train_epochs, num_warm_epochs, push_start, push_epochs, target_auroc
 
 # train the model
 log('start training')
