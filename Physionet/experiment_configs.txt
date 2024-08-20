@@ -1,4 +1,6 @@
 exp1: vgg11, 32 proto, wrong push
-exp2: vgg11, 32 proto
-exp3: vgg19, 32 proto
-exp4: vgg16, 32 proto
+exp2: vgg11, 32 proto, last layer incorr wei assignment
+exp3: vgg19, 32 proto, last layer incorr wei assignment
+exp4: vgg16, 32 proto, last layer incorr wei assignment
+exp5: vgg19, 32 proto
+exp6: vgg11, 32 proto
