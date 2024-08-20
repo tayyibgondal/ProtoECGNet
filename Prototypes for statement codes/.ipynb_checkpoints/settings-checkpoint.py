@@ -22,12 +22,14 @@
 base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
 experiment_run = '001'
 
-img_size = 224  # MANIPULATE ?
+bootstraping = True
+
+img_size = 500  # MANIPULATE ?
 num_classes = 5
 num_scp_codes = 71
 num_prototypes_for_each_class = 32  # MANIPULATE ?
 num_prototypes = num_scp_codes * num_prototypes_for_each_class
-prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
+prototype_shape = (num_prototypes, 256, 1, 1)  # MANIPULATE ?
 prototype_activation_function = 'log'
 add_on_layers_type = 'regular'
 

@@ -1,0 +1,4 @@
+exp1: vgg11, 32 proto, wrong push
+exp2: vgg11, 32 proto
+exp3: vgg19, 32 proto
+exp4: vgg16, 32 proto

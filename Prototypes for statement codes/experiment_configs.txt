@@ -1,3 +1,6 @@
+# ------------------------------------------
+# NO BOOTSTRAPING
+# ------------------------------------------
 exp1: 
         img_size = 224  # MANIPULATE ?
         num_classes = 5
@@ -35,4 +38,24 @@ exp7:   same as exp1
 
 exp8:   same as exp1
         NOTE: CLUSTER COST UPDATED
-        
+
+# ------------------------------------------
+# BOOTSTRAPING
+# ------------------------------------------
+exp9:   same as exp8
+        bootstrap sampling for auroc (only 95% CI)
+        NOTE: CLUSTER COST UPDATED
+
+exp10:  same as exp2
+        bootstrap sampling for auroc (not only 95% CI)
+        OLD CLUSTER COST
+
+# NEXT STEPS - TRY OTHER BACKENDS WITH ONE OF THE EXPERIMENT CONFIGURATION
+exp11: same as exp 10
+       base = vgg13
+
+exp12: same as exp 10
+       base = vgg16
+
+exp13: same as exp 10
+       base = vgg19
