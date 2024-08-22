@@ -54,12 +54,24 @@ exp10:  same as exp2
 exp11: same as exp 10
        base = vgg13
 
-exp12: same as exp 10
-       base = vgg16
-
-exp13: same as exp 10
-       base = vgg19
-
 # ------------------------------------------
 # TODO -- DO EXPERIMENT 9 AGAIN WITH 32 AND 1 PROTOTYPES, VGG11 AND VGG19 BACKENDS.
 # ------------------------------------------
+exp12: img_size = 224  # MANIPULATE ?
+        num_classes = 5
+        num_scp_codes = 71
+        num_prototypes_for_each_class = 1  # MANIPULATE ?
+        num_prototypes = num_scp_codes * num_prototypes_for_each_class
+        prototype_shape = (num_prototypes, 128, 1, 1)  # MANIPULATE ?
+        bootstraping
+        cluster cost = torch.mean, torch.mean
+        vgg19
+
+exp13: same as exp12 with vgg11.
+
+exp14: same as exp12, with 32 protos
+
+exp15: same as exp13, with 32 protos
+
+# NOTE: IF DOES NOT WORK, TRY UPDATING CLUSTER COST, IMAGE SIZE
+        

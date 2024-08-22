@@ -2,24 +2,6 @@ import os
 import torch
 import numpy as np
 
-def load_mappings(file_path):
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    mappings = {}
-    current_section = None
-
-    for line in lines:
-        line = line.strip()
-        if line.endswith('Mappings:'):
-            current_section = line.replace(' Mappings:', '')
-            mappings[current_section] = {}
-        elif ':' in line:
-            key, value = line.split(':')
-            mappings[current_section][key.strip()] = int(value.strip())
-
-    return mappings
-    
 def list_of_distances(X, Y):
     '''
     X: A tensor of shape (𝑁, 𝐷) N is the number of samples and D is the dimensionality of each sample.

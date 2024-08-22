@@ -244,7 +244,7 @@ if bootstraping:
                     max_dist = (model.module.prototype_shape[1] * model.module.prototype_shape[2] * model.module.prototype_shape[3])
     
                     prototypes_of_correct_class = scp_labels.repeat_interleave(num_prototypes_for_each_class, dim=1)  # (batch_size, num_prototypes)
-                    inverted_distances = torch.sum((max_dist - min_distances) * prototypes_of_correct_class, dim=1)  # (batch_size,)
+                    inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)  # (batch_size,)
                     cluster_cost = torch.mean(max_dist - inverted_distances)
     
                     prototypes_of_wrong_class = 1 - prototypes_of_correct_class  # (batch_size, num_protos)
@@ -323,6 +323,10 @@ if bootstraping:
             score = roc_auc_score(all_labels_np[indices], all_scores_np[indices], average='macro')
             bootstrapped_auroc.append(score)
     
+        del all_labels_np
+        del all_scores_np
+        del indices
+        
         sorted_scores = np.array(bootstrapped_auroc)
         sorted_scores.sort()
     
@@ -349,6 +353,7 @@ if bootstraping:
                 total_cluster_cost / n_batches, 
                 total_separation_cost / n_batches, 
                 p_avg_pair_dist.item())
+        
     
     def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
         assert optimizer is not None

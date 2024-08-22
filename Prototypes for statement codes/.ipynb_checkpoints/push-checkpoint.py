@@ -7,11 +7,11 @@ import copy
 import time
 
 from receptive_field import compute_rf_prototype
-from helpers import makedir, find_high_activation_crop
+from helpers import makedir, find_high_activation_crop, load_mappings
 
 from preprocess import normalize_img
 
-from settings import num_scp_codes
+from settings import num_scp_codes, mappings_file
 
 # push each prototype to the nearest patch in the training set
 def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0,1])
@@ -179,6 +179,14 @@ def update_prototypes_on_batch(search_batch_input,
     proto_w = prototype_shape[3]
     max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
 
+    # load the prototype mappings
+    mappings = load_mappings(mappings_file)
+    # Access the mappings
+    scp_labels_mapping = mappings['SCP Labels']
+    # Invert the dictionary
+    scp_labels_mapping = {value: key.replace('/', '-or-') for key, value in scp_labels_mapping.items()}
+
+
     for j in range(n_prototypes):
         #if n_prototypes_per_class != None:
         if class_specific:
@@ -259,7 +267,7 @@ def update_prototypes_on_batch(search_batch_input,
                     # save the prototype image (highly activated region of the whole image)
                     proto_img_j = normalize_img(proto_img_j)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + str(j) + '.png'),
+                                            prototype_img_filename_prefix + str(j) + '-' + scp_labels_mapping[j] + '.png'),
                                proto_img_j,
                                vmin=0.0,
                                vmax=1.0)
