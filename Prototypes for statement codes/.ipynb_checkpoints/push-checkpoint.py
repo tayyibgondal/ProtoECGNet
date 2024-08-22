@@ -11,7 +11,7 @@ from helpers import makedir, find_high_activation_crop, load_mappings
 
 from preprocess import normalize_img
 
-from settings import num_scp_codes, mappings_file
+from settings import num_scp_codes, mappings_file, num_prototypes_for_each_class
 
 # push each prototype to the nearest patch in the training set
 def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0,1])
@@ -267,7 +267,7 @@ def update_prototypes_on_batch(search_batch_input,
                     # save the prototype image (highly activated region of the whole image)
                     proto_img_j = normalize_img(proto_img_j)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
-                                            prototype_img_filename_prefix + str(j) + '-' + scp_labels_mapping[j] + '.png'),
+                                            prototype_img_filename_prefix + str(j) + '-' + scp_labels_mapping[j//num_prototypes_for_each_class] + '.png'),
                                proto_img_j,
                                vmin=0.0,
                                vmax=1.0)
