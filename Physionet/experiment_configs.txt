@@ -4,3 +4,5 @@ exp3: vgg19, 32 proto, last layer incorr wei assignment
 exp4: vgg16, 32 proto, last layer incorr wei assignment
 exp5: vgg19, 32 proto
 exp6: vgg11, 32 proto
+exp7: exp3 + 10 proto
+exp8: exp3 (lesser model saving threshold)

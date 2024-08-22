@@ -42,12 +42,22 @@ exp8:   same as exp1
 # ------------------------------------------
 # BOOTSTRAPING
 # ------------------------------------------
-exp9:   same as exp8
+exp9:   same as exp8 [BEST WITH BOOTSTRAP]
         bootstrap sampling for auroc (only 95% CI)
         NOTE: CLUSTER COST UPDATED
 
-exp10:  same as exp2
+exp10:  same as exp2 
         bootstrap sampling for auroc (not only 95% CI)
         OLD CLUSTER COST
 
 # NEXT STEPS - TRY OTHER BACKENDS WITH ONE OF THE EXPERIMENT CONFIGURATION
+exp11: same as exp 10
+       base = vgg13
+
+exp12: same as exp 10
+       base = vgg16
+
+exp13: same as exp 10
+       base = vgg19
+
+# TODO -- DO EXPERIMENT 9 AGAIN WITH 32 AND 1 PROTOTYPES, VGG11 AND VGG19 BACKENDS.

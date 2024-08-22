@@ -1,24 +1,3 @@
-# TODO: INCREASE THE DENSE HEAD AT THE END OF MODEL TO SEE IF IT WORKS WELL...
-
-# base_architecture_to_features = {'resnet18': resnet18_features,
-#                                  'resnet34': resnet34_features,
-#                                  'resnet50': resnet50_features,
-#                                  'resnet101': resnet101_features,
-#                                  'resnet152': resnet152_features,
-#                                  'densenet121': densenet121_features,
-#                                  'densenet161': densenet161_features,
-#                                  'densenet169': densenet169_features,
-#                                  'densenet201': densenet201_features,
-#                                  'vgg11': vgg11_features,
-#                                  'vgg11_bn': vgg11_bn_features,
-#                                  'vgg13': vgg13_features,
-#                                  'vgg13_bn': vgg13_bn_features,
-#                                  'vgg16': vgg16_features,
-#                                  'vgg16_bn': vgg16_bn_features,
-#                                  'vgg19': vgg19_features,
-#                                  'vgg19_bn': vgg19_bn_features}
-
-# DISCLAIMER: The following two are not used from settings.py, SPECIFY VIA TERMINAL BEFORE RUNNING THE MAIN.PY
 base_architecture = 'resnet18'  # Choose one of Keys from above dictionary
 experiment_run = '001'
 
@@ -36,7 +15,7 @@ add_on_layers_type = 'regular'
 # ----------------------------------------
 # Following two settings are specifically for classification of 5 super classes
 train_information = 'train-100.json'
-test_information = 'test-100.json'
+test_information = 'val-100.json'
 
 train_batch_size = 80
 test_batch_size = 100
