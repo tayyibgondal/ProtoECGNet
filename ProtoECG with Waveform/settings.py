@@ -33,8 +33,8 @@ add_on_layers_type = 'regular'
 
 # ----------------------------------------
 # Following two settings are specifically for classification of 5 super classes
-train_information = 'train-500.csv'
-test_information = 'test-500.csv'
+train_information = 'train-100.csv'
+test_information = 'test-100.csv'
 
 train_batch_size = 80
 test_batch_size = 80

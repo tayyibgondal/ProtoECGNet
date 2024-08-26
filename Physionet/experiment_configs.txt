@@ -8,3 +8,4 @@ exp7: exp3 + 10 proto
 exp8: exp3 (lesser model saving threshold)
 
 exp9-13: exp5
+Try changing protos to 10, and incorrect wei assignment.

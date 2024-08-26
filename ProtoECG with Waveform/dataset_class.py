@@ -31,9 +31,11 @@ class PTBXL_Dataset(Dataset):
         ecg_signal = (ecg_signal - ecg_signal.mean(axis=0)) / ecg_signal.std(axis=0)
 
         # Convert to a PyTorch tensor
-        ecg_signal = torch.tensor(ecg_signal, dtype=torch.float32)
-
+        ecg_signal = torch.tensor(ecg_signal, dtype=torch.float32)  # This is of shape (12, 1000), if frequency is 100Hz.
+        # print(ecg_signal.shape)
+        
         if self.reshape:
+            # reshaping ecg signal to be in 3 channels, since the image backends work need 3 channels
             ecg_signal = ecg_signal.permute(1, 0).contiguous().view(3, 100, -1)  # Permute if needed
 
         return ecg_signal, label
