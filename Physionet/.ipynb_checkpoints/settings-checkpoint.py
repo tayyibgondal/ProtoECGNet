@@ -16,6 +16,7 @@ test_batch_size = 80
 # Specify the number of examples to load (set them to None to load all examples)
 num_train_examples = None  
 num_test_examples = None 
+num_examples = None # used only for 5cv file.
 
 # Logging directory for results
 log_dir = 'logs'
@@ -44,4 +45,4 @@ push_start = 10
 push_epochs = [i for i in range(num_train_epochs) if i % 10 == 0]
 
 # for saving a trained model checkpoint
-target_auroc = 0.70
+target_auroc = 0.80
